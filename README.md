@@ -1,311 +1,162 @@
-# 🤖 AI Email Assistant
+# ✉️ AI Email Assistant
 
-An AI-powered email writing assistant built with **Python, Streamlit, and Google Gemini**.
+An AI-powered Streamlit application that helps users improve, rewrite, summarize, and generate replies to email content with Google Gemini. Choose the email purpose, tone, response length, and action, then review the generated result beside the original message.
 
-The application helps users improve, rewrite, summarize, or generate email content based on the selected **email purpose, tone, and length**.
+## 📸 Application preview
 
----
+The screenshots below reflect the current Streamlit interface and the repository's available workflows.
 
-## 📸 Application Preview
+### Rewrite email
 
-### Email Improvement
+![AI Email Assistant — rewrite workflow](screenshot/Email%20improver%20Rewrite.png)
 
-![Email Improvement](screenshots/01_email_improvement.png)
+### Generate a reply
 
-### Rewrite
+![AI Email Assistant — generate reply workflow](screenshot/generate%20reply%20email%20improver.png)
 
-![Rewrite Email](screenshots/02_email_rewrite.png)
+### Summarize email
 
-### Generate Reply
+![AI Email Assistant — summarize workflow](screenshot/summaise%20email%20improver.png)
 
-![Generate Reply](screenshots/03_generate_reply.png)
+> Screenshots are stored in [`screenshot/`](screenshot/) and show the local application UI. Run the app locally to create a fresh screenshot with your own Gemini response.
 
-> Screenshots demonstrate the local Streamlit application and its different email-generation workflows.
+## ✨ Features
 
----
+- **Four AI actions:** Improve, Rewrite, Generate Reply, and Summarize
+- **Eight email purposes:** General, Job Application, Follow-up, Meeting Request, Leave Request, Customer Support, Complaint, and Business
+- **Six tones:** Professional, Formal, Friendly, Casual, Persuasive, and Apologetic
+- **Three response lengths:** Short, Medium, and Detailed
+- **Side-by-side workflow:** Enter the original email on the left and view the generated result on the right
+- **Structured prompting:** The prompt engine preserves the user's intended meaning and tells Gemini not to invent names, dates, companies, promises, credentials, or other facts
+- **Input validation:** Empty, very short, and over-sized inputs are rejected before an API request is made
+- **Friendly error handling:** Missing credentials, API failures, and empty model responses are surfaced in the Streamlit UI
+- **Secret-safe configuration:** Credentials are loaded from `GEMINI_API_KEY` or Streamlit secrets and are excluded from Git
+- **Automated tests:** Pytest coverage for prompt construction and validation behavior
+- **Docker support:** The included image serves Streamlit on port `8080`
 
-## 🚀 Project Overview
-
-Writing professional emails can take time, especially when the user needs to adjust grammar, tone, structure, or level of detail.
-
-This project provides a simple AI-powered interface where a user can:
-
-- Enter an email or email-related instruction
-- Select the purpose of the email
-- Select the desired tone
-- Select the preferred response length
-- Choose an AI action
-- Generate an improved or rewritten result
-
-The application uses **Google Gemini** to generate the final email content.
-
----
-
-## ✨ Key Features
-
-### 📧 Multiple Email Purposes
-
-- General
-- Job Application
-- Follow-up
-- Meeting Request
-- Leave Request
-- Customer Support
-- Complaint
-- Business
-
-### 🎯 Multiple Tones
-
-- Professional
-- Formal
-- Friendly
-- Casual
-- Persuasive
-- Apologetic
-
-### 🛠️ Multiple AI Actions
-
-- **Improve** — improves grammar, clarity, and structure
-- **Rewrite** — rewrites the email while preserving its intended meaning
-- **Generate Reply** — creates a suitable reply based on the provided content
-- **Summarize** — creates a concise version of the provided email
-
-### 📏 Response Length
-
-- Short
-- Medium
-- Detailed
-
-### 🔐 API Key Security
-
-The Gemini API key is not stored in the source code.
-
-The application reads credentials from environment variables or Streamlit secrets. The real `.streamlit/secrets.toml` file is excluded from Git using `.gitignore`.
-
-### ✅ Input Validation
-
-The project validates email input before sending it to the AI model and handles invalid or empty input gracefully.
-
-### ⚠️ Error Handling
-
-AI/API failures are handled through user-friendly error messages.
-
-### 🧪 Automated Tests
-
-Tests cover prompt generation and input validation.
-
----
-
-## 🏗️ Project Architecture
+## 🏗️ Architecture and request flow
 
 ```text
-AI Email Assistant
-│
-├── Streamlit UI
-│   └── app.py
-│
-├── Prompt Engineering
-│   └── src/prompt_engine.py
-│
-├── Gemini API Client
-│   └── src/gemini_client.py
-│
-├── Input Validation
-│   └── src/utils.py
-│
-├── Automated Tests
-│   └── tests/
-│
-├── Configuration
-│   ├── .streamlit/secrets.toml.example
-│   ├── requirements.txt
-│   └── pytest.ini
-│
-└── Containerization
-    ├── Dockerfile
-    └── .dockerignore
+User input and controls
+          │
+          ▼
+      app.py (Streamlit UI)
+          │
+          ├── validate_email(...) ── reject invalid input
+          │
+          └── build_prompt(...) ──── assemble guarded prompt
+                                      │
+                                      ▼
+                           improve_email(...) in
+                           src/gemini_client.py
+                                      │
+                                      ▼
+                              Google Gemini API
+                                      │
+                                      ▼
+                              Generated result
 ```
 
----
+The UI entry point is [`app.py`](app.py). It collects the email text and user controls, validates the input, builds a structured prompt through [`src/prompt_engine.py`](src/prompt_engine.py), and calls the cached Gemini client in [`src/gemini_client.py`](src/gemini_client.py). Validation rules live in [`src/utils.py`](src/utils.py), keeping the UI, prompt construction, API integration, and tests separated.
 
-## 📂 Project Structure
+## 📂 Project structure
 
 ```text
-AI_Email_Assistant/
-│
-├── app.py
-├── Dockerfile
-├── .dockerignore
-├── .gitignore
-├── LICENSE
-├── README.md
-├── pytest.ini
-├── requirements.txt
-│
-├── .streamlit/
-│   └── secrets.toml.example
-│
+.
+├── app.py                         # Streamlit application entry point
 ├── src/
-│   ├── __init__.py
-│   ├── gemini_client.py
-│   ├── prompt_engine.py
-│   └── utils.py
-│
-└── tests/
-    ├── test_prompt_engine.py
-    └── test_utils.py
+│   ├── gemini_client.py           # Gemini client and model call
+│   ├── prompt_engine.py           # Action, tone, length, and safety prompt
+│   └── utils.py                   # Input validation
+├── tests/
+│   ├── test_prompt_engine.py      # Prompt behavior tests
+│   └── test_utils.py              # Validation tests
+├── screenshot/                    # Current UI screenshots
+├── .streamlit/
+│   └── secrets.toml.example       # Local secret configuration template
+├── Architecture Diagram           # Text architecture reference
+├── requirements.txt                # Python dependencies
+├── pytest.ini                      # Pytest configuration
+├── Dockerfile                      # Container image definition
+└── README.md
 ```
 
----
+## 🛠️ Tech stack
 
-## 🔄 Application Workflow
+| Technology | Role |
+| --- | --- |
+| Python 3.13 | Application runtime |
+| Streamlit | Web UI and secret management |
+| `google-genai` | Google Gemini API client |
+| Gemini `gemini-3.6-flash` | Text generation model configured by the app |
+| Pytest | Automated tests |
+| Docker | Containerized deployment |
 
-```text
-User enters email
-        │
-        ▼
-Select email purpose
-        │
-        ▼
-Select tone
-        │
-        ▼
-Select response length
-        │
-        ▼
-Select AI action
-        │
-        ▼
-Prompt Engine
-        │
-        ▼
-Google Gemini
-        │
-        ▼
-Generated Email
-        │
-        ▼
-Display result in Streamlit
-```
+## 🚀 Run locally
 
----
-
-## 🧠 Prompt Engineering
-
-The project uses a structured prompt instead of sending the user's input directly to Gemini.
-
-The prompt incorporates:
-
-- Email purpose
-- Desired tone
-- Desired length
-- Selected action
-- Original user input
-
-It also includes safeguards to preserve the intended meaning and avoid unnecessarily inventing unsupported information.
-
-Prompt construction is separated from the Streamlit UI, making the application easier to maintain and test.
-
----
-
-## 🛠️ Tech Stack
-
-| Technology | Purpose |
-|---|---|
-| Python | Application development |
-| Streamlit | Web interface |
-| Google Gemini | Generative AI |
-| `google-genai` | Gemini API integration |
-| Pytest | Automated testing |
-| Docker | Containerization |
-| Git | Version control |
-| GitHub | Source-code hosting |
-
----
-
-## ⚙️ Local Installation
-
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/sgsinghashka-del/Ai-Email-Asistant.git
 cd Ai-Email-Asistant
+python -m venv .venv
 ```
 
-### 2. Create a virtual environment
+Activate the virtual environment:
 
-Windows:
+```bash
+# macOS/Linux
+source .venv/bin/activate
 
-```cmd
-python -m venv venv
-venv\Scripts\activate
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
 ```
 
-### 3. Install dependencies
+Install dependencies:
 
-```cmd
-pip install -r requirements.txt
+```bash
+python -m pip install -r requirements.txt
 ```
 
-### 4. Configure the Gemini API key
+### 2. Configure Gemini
 
-Create:
+Copy the template:
 
-```text
-.streamlit/secrets.toml
+```bash
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 ```
 
-Add:
+Then set a valid key in `.streamlit/secrets.toml`:
 
 ```toml
 GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
 ```
 
-Do **not** commit this file to GitHub.
+The application also accepts `GEMINI_API_KEY` as an environment variable, which is the preferred approach for hosted deployments. Never commit the real secrets file or an API key.
 
-The repository contains:
+### 3. Start Streamlit
 
-```text
-.streamlit/secrets.toml.example
-```
-
-as a safe configuration template.
-
-### 5. Run the application
-
-```cmd
+```bash
 streamlit run app.py
 ```
 
-Open:
+Open [http://localhost:8501](http://localhost:8501) in your browser.
 
-```text
-http://localhost:8501
-```
+## 🧪 Run tests
 
----
-
-## 🧪 Run Tests
-
-From the project root:
-
-```cmd
+```bash
 pytest
 ```
 
-You can also use:
+The test suite verifies that:
 
-```cmd
-python -m pytest
-```
+- prompts include the selected purpose, tone, length, and input;
+- prompts include the no-invented-facts instruction;
+- empty and overly short inputs are rejected;
+- inputs over 12,000 characters are rejected; and
+- valid input passes validation.
 
-The project includes tests for prompt construction and input validation.
-
----
-
-## 🐳 Docker Support
-
-The project includes a Dockerfile and is ready to be containerized.
+## 🐳 Run with Docker
 
 Build the image:
 
@@ -313,113 +164,31 @@ Build the image:
 docker build -t ai-email-assistant .
 ```
 
-Run the container:
+Run it on local port `8501`:
 
 ```bash
-docker run -p 8501:8080 ai-email-assistant
+docker run --rm -p 8501:8080 \\
+  -e GEMINI_API_KEY="YOUR_GEMINI_API_KEY" \\
+  ai-email-assistant
 ```
 
-For production deployment, provide the Gemini API key through the hosting platform's secret/environment-variable mechanism rather than putting the key into the image.
+Then open [http://localhost:8501](http://localhost:8501). The Docker image runs `streamlit run app.py` on `0.0.0.0:8080`. For production, inject the key through the hosting provider's secret manager rather than baking it into the image.
 
----
+## 🔐 Security notes
 
-## ☁️ Deployment
+- Keep `.streamlit/secrets.toml`, `.env` files, API keys, and service-account JSON files out of version control.
+- Rotate a key immediately if it is exposed.
+- Treat generated email text as model output and review it before sending.
+- The prompt explicitly asks Gemini to preserve meaning and avoid fabricating unsupported facts, but users should still verify the final result.
 
-The project is **Docker-ready and cloud-deployment ready**.
+## 📌 Current scope and future improvements
 
-It can be deployed to a suitable cloud/container platform such as Google Cloud Run or another Docker-compatible hosting service.
+The repository currently provides a local, Docker-ready Streamlit application; it does not claim a live hosted deployment. Potential next steps include conversation history, authentication, copy/download actions, email-provider integration, model selection, usage tracking, response-quality evaluation, monitoring, and CI/CD.
 
-> **Current status:** The application is developed and tested locally and uploaded to GitHub. A live cloud deployment is not currently claimed.
+## 👤 Author
 
-This keeps the repository accurate while retaining the Docker configuration required for future deployment.
-
----
-
-## 🔐 Security Notes
-
-Never commit:
-
-```text
-.env
-.streamlit/secrets.toml
-API keys
-service-account JSON files
-```
-
-The repository's `.gitignore` excludes local secrets.
-
-For deployment, use the hosting provider's secret-management or environment-variable facility.
-
-If an API key is accidentally exposed publicly, revoke/rotate it immediately.
-
----
-
-## 💡 Example Use Cases
-
-### Job Application
-Transform a basic job-related message into a professional application email.
-
-### Leave Request
-Generate a structured leave request with the selected tone and level of detail.
-
-### Customer Support
-Rewrite a customer message into a clearer and more professional response.
-
-### Meeting Request
-Create a concise meeting request with an appropriate professional tone.
-
-### Business Communication
-Improve business emails while preserving the original intent.
-
-### Follow-up Email
-Create a professional follow-up after an interview, meeting, or previous communication.
-
----
-
-## 📈 What This Project Demonstrates
-
-This project demonstrates practical skills in:
-
-- Generative AI application development
-- Gemini API integration
-- Prompt engineering
-- Streamlit application development
-- Modular Python architecture
-- Input validation
-- Error handling
-- Automated testing
-- Secret management
-- Docker containerization
-- Git/GitHub workflow
-
----
-
-## 🔮 Future Improvements
-
-- Conversation/history support
-- User authentication
-- Copy-to-clipboard functionality
-- Download generated emails as `.txt` or `.docx`
-- Email provider integration
-- Response quality evaluation
-- Usage/token tracking
-- Prompt versioning
-- Model selection
-- Production monitoring
-- Cloud deployment
-- Automated CI/CD with GitHub Actions
-
----
-
-## 👨‍💻 Author
-
-**Ashka Singh**
-
-GitHub:  
-https://github.com/sgsinghashka-del
-
----
+**Ashka Singh** — [@sgsinghashka-del](https://github.com/sgsinghashka-del)
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
